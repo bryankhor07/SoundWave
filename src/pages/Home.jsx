@@ -1,24 +1,37 @@
 import { useEffect, useState } from 'react';
-import { searchTracks, getCharts } from '../lib/deezer';
+import { searchTracks, getCharts, getGenres } from '../lib/deezer';
 import { usePlayer } from '../contexts/PlayerProvider';
 import { useFavorites } from '../contexts/FavoritesProvider';
+import SearchBar from '../components/SearchBar';
+import TrackCard from '../components/TrackCard';
+import AlbumCard from '../components/AlbumCard';
+import GenreCard from '../components/GenreCard';
 
 export default function Home() {
   const [charts, setCharts] = useState(null);
+  const [genres, setGenres] = useState(null);
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState(null);
   
   const { play, pause, next, prev, isPlaying, currentTrack, volume, setVolume, currentTime, duration } = usePlayer();
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
-    const loadCharts = async () => {
+    const loadInitialData = async () => {
       try {
         setLoading(true);
-        const chartsData = await getCharts();
-        setCharts(chartsData);
+        const [chartsData, genresData] = await Promise.all([
+          getCharts(),
+          getGenres()
+        ]);
         
-        // Check if we're using mock data (no error thrown but limited data)
+        setCharts(chartsData);
+        setGenres(genresData);
+        
+        // Check if we're using mock data
         if (chartsData.tracks?.data?.length === 3 && chartsData.tracks.data[0].title === "Harder Better Faster Stronger") {
           console.log('Using mock data - API unavailable');
         }
@@ -29,8 +42,34 @@ export default function Home() {
       }
     };
 
-    loadCharts();
+    loadInitialData();
   }, []);
+
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    
+    if (!query) {
+      setSearchResults(null);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const results = await searchTracks(query, { limit: 20 });
+      setSearchResults(results);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setSearchResults({ data: [] });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleGenreClick = async (genre) => {
+    // For now, search for the genre name
+    // In a full implementation, you'd use genre-specific endpoints
+    handleSearch(genre.name);
+  };
 
   const handlePlayTrack = (track, trackList = []) => {
     if (currentTrack?.id === track.id && isPlaying) {
@@ -85,11 +124,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500">
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
+        {/* Header with Search */}
+        <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-white mb-4">Discover Music</h1>
-          <p className="text-xl text-white/90">Explore trending tracks, artists, and albums</p>
+          <p className="text-xl text-white/90 mb-8">Search, explore, and discover your next favorite song</p>
           
-          {/* Demo Player Controls */}
+          {/* Search Bar */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <SearchBar onSearch={handleSearch} />
+          </div>
+
+          {/* Now Playing Widget */}
           {currentTrack && (
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 mt-8 max-w-md mx-auto">
               <h3 className="text-lg font-semibold text-white mb-4">Now Playing</h3>
@@ -171,81 +216,70 @@ export default function Home() {
           )}
         </div>
 
-        {charts && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Top Tracks */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-white mb-4">🎵 Top Tracks</h2>
-              <div className="space-y-3">
-                {charts.tracks?.data?.slice(0, 5).map((track, index) => (
-                  <div key={track.id} className="flex items-center space-x-3 text-white/90 hover:text-white transition-colors group">
-                    <span className="text-sm font-semibold w-6">{index + 1}</span>
-                    <img src={track.album?.cover_small} alt={track.title} className="w-10 h-10 rounded" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{track.title}</p>
-                      <p className="text-sm text-white/70 truncate">{track.artist?.name}</p>
-                    </div>
-                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handlePlayTrack(track, charts.tracks?.data?.slice(0, 10) || [])}
-                        className="p-2 rounded-full bg-purple-500 hover:bg-purple-600 text-white transition-colors"
-                        title={currentTrack?.id === track.id && isPlaying ? 'Pause' : 'Play'}
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          {currentTrack?.id === track.id && isPlaying ? (
-                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                          ) : (
-                            <path d="M8 5v14l11-7z"/>
-                          )}
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleFavoriteToggle(track)}
-                        className={`p-2 rounded-full transition-colors ${
-                          isFavorite(track.id) ? 'text-red-400 hover:text-red-300' : 'text-white/60 hover:text-white'
-                        }`}
-                        title={isFavorite(track.id) ? 'Remove from favorites' : 'Add to favorites'}
-                      >
-                        <svg className="w-4 h-4" fill={isFavorite(track.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </button>
-                    </div>
+        {/* Search Results */}
+        {searchQuery && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-white">
+                Search Results for "{searchQuery}"
+              </h2>
+              {searchLoading && (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              )}
+            </div>
+            
+            {searchResults && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {searchResults.data?.length > 0 ? (
+                  searchResults.data.map((track) => (
+                    <TrackCard key={track.id} track={track} />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center text-white/70 py-12">
+                    <p className="text-xl mb-2">No results found</p>
+                    <p>Try searching for different keywords</p>
                   </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Genres Section */}
+        {!searchQuery && genres && (
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-white mb-6">Browse by Genre</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {genres.data?.slice(0, 12).map((genre) => (
+                <GenreCard 
+                  key={genre.id} 
+                  genre={genre} 
+                  onClick={handleGenreClick}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Charts Section */}
+        {!searchQuery && charts && (
+          <div className="space-y-12">
+            {/* Top Tracks Grid */}
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-6">🎵 Top Tracks</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {charts.tracks?.data?.slice(0, 10).map((track) => (
+                  <TrackCard key={track.id} track={track} />
                 ))}
               </div>
             </div>
 
-            {/* Top Artists */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-white mb-4">🎤 Top Artists</h2>
-              <div className="space-y-3">
-                {charts.artists?.data?.slice(0, 5).map((artist, index) => (
-                  <div key={artist.id} className="flex items-center space-x-3 text-white/90 hover:text-white transition-colors">
-                    <span className="text-sm font-semibold w-6">{index + 1}</span>
-                    <img src={artist.picture_small} alt={artist.name} className="w-10 h-10 rounded-full" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{artist.name}</p>
-                      <p className="text-sm text-white/70">{artist.nb_fan?.toLocaleString()} fans</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Top Albums */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-white mb-4">💿 Top Albums</h2>
-              <div className="space-y-3">
-                {charts.albums?.data?.slice(0, 5).map((album, index) => (
-                  <div key={album.id} className="flex items-center space-x-3 text-white/90 hover:text-white transition-colors">
-                    <span className="text-sm font-semibold w-6">{index + 1}</span>
-                    <img src={album.cover_small} alt={album.title} className="w-10 h-10 rounded" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{album.title}</p>
-                      <p className="text-sm text-white/70 truncate">{album.artist?.name}</p>
-                    </div>
-                  </div>
+            {/* Top Albums Grid */}
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-6">💿 Top Albums</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {charts.albums?.data?.slice(0, 10).map((album) => (
+                  <AlbumCard key={album.id} album={album} />
                 ))}
               </div>
             </div>
