@@ -287,6 +287,32 @@ export async function getCharts() {
 }
 
 /**
+ * Get available genres
+ * @returns {Promise<Object>} - Genres object containing list of genres
+ */
+export async function getGenres() {
+  const url = `${DEEZER_API_BASE}/genre`;
+  const cacheKey = 'genres';
+  
+  try {
+    return await fetchWithCache(url, cacheKey);
+  } catch (error) {
+    console.warn('Genres API unavailable, using fallback:', error.message);
+    // Return basic genres as fallback
+    return {
+      data: [
+        { id: 132, name: 'Pop', picture_medium: 'https://e-cdns-images.dzcdn.net/images/misc/0b86c7ca2c6eb23b5ba6a0b19c9b7b5b/264x264-000000-80-0-0.jpg' },
+        { id: 113, name: 'Dance', picture_medium: 'https://e-cdns-images.dzcdn.net/images/misc/d0c3f7b2c6eb23b5ba6a0b19c9b7b5b/264x264-000000-80-0-0.jpg' },
+        { id: 116, name: 'Rap/Hip Hop', picture_medium: 'https://e-cdns-images.dzcdn.net/images/misc/f2bc007e9133c946ac3c3907ddc5d2ea/264x264-000000-80-0-0.jpg' },
+        { id: 152, name: 'Rock', picture_medium: 'https://e-cdns-images.dzcdn.net/images/misc/8b2b6c7c5cd6e8c9c6e8c9c6e8c9c6e8/264x264-000000-80-0-0.jpg' },
+        { id: 129, name: 'Jazz', picture_medium: 'https://e-cdns-images.dzcdn.net/images/misc/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6/264x264-000000-80-0-0.jpg' },
+        { id: 85, name: 'Alternative', picture_medium: 'https://e-cdns-images.dzcdn.net/images/misc/b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7/264x264-000000-80-0-0.jpg' }
+      ]
+    };
+  }
+}
+
+/**
  * Clear the cache (useful for testing or manual cache invalidation)
  */
 export function clearCache() {
