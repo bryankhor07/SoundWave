@@ -9,6 +9,46 @@ const cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
 
 /**
+ * JSONP helper function to bypass CORS
+ * @param {string} url - The API endpoint URL
+ * @returns {Promise<Object>} - Parsed JSON response
+ */
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `deezer_callback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const script = document.createElement('script');
+    
+    // Set up the callback
+    window[callbackName] = (data) => {
+      // Clean up
+      document.head.removeChild(script);
+      delete window[callbackName];
+      resolve(data);
+    };
+    
+    // Handle errors
+    script.onerror = () => {
+      document.head.removeChild(script);
+      delete window[callbackName];
+      reject(new Error('Network error: Unable to connect to Deezer API'));
+    };
+    
+    // Make the request
+    script.src = `${url}&callback=${callbackName}`;
+    document.head.appendChild(script);
+    
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      if (window[callbackName]) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        reject(new Error('Request timeout: Deezer API did not respond'));
+      }
+    }, 10000);
+  });
+}
+
+/**
  * Generic fetch wrapper with caching and error handling
  * @param {string} url - The API endpoint URL
  * @param {string} cacheKey - Unique cache key for this request
@@ -22,13 +62,8 @@ async function fetchWithCache(url, cacheKey) {
   }
 
   try {
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Deezer API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    // Use JSONP for Deezer API to bypass CORS
+    const data = await jsonp(url);
     
     // Handle Deezer API error responses
     if (data.error) {
@@ -43,9 +78,6 @@ async function fetchWithCache(url, cacheKey) {
 
     return data;
   } catch (error) {
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Network error: Unable to connect to Deezer API. Please check your internet connection.');
-    }
     throw error;
   }
 }
