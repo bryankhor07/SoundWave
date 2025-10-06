@@ -1,4 +1,13 @@
 import { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { FavoritesProvider } from './contexts/FavoritesProvider'
+import { PlayerProvider } from './contexts/PlayerProvider'
+import NavBar from './components/NavBar'
+import Home from './pages/Home'
+import TrackDetails from './pages/TrackDetails'
+import ArtistDetails from './pages/ArtistDetails'
+import AlbumDetails from './pages/AlbumDetails'
+import Favorites from './pages/Favorites'
 import * as deezer from './lib/deezer.js'
 
 function App() {
@@ -9,18 +18,22 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-6xl font-bold text-white mb-4">SoundWave</h1>
-        <p className="text-xl text-white/90 mb-8">Music Discovery Platform</p>
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-white">
-          <p className="text-sm">✓ Vite + React</p>
-          <p className="text-sm">✓ Tailwind CSS v3</p>
-          <p className="text-sm">✓ Deezer API Integration</p>
-          <p className="text-sm text-green-400">✓ Open console to test: window.deezer</p>
-        </div>
-      </div>
-    </div>
+    <FavoritesProvider>
+      <PlayerProvider>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500">
+            <NavBar />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/track/:id" element={<TrackDetails />} />
+              <Route path="/artist/:id" element={<ArtistDetails />} />
+              <Route path="/album/:id" element={<AlbumDetails />} />
+              <Route path="/favorites" element={<Favorites />} />
+            </Routes>
+          </div>
+        </Router>
+      </PlayerProvider>
+    </FavoritesProvider>
   )
 }
 
