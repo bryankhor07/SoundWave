@@ -1,32 +1,74 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const FavoritesContext = createContext();
 
-export function FavoritesProvider({ children }) {
-  const [favorites, setFavorites] = useState([]);
+const STORAGE_KEY = 'tunefind_favs';
 
-  const addToFavorites = (item) => {
+// Helper functions for localStorage
+const loadFavorites = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error loading favorites from localStorage:', error);
+    return [];
+  }
+};
+
+const saveFavorites = (favorites) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+  } catch (error) {
+    console.error('Error saving favorites to localStorage:', error);
+  }
+};
+
+export function FavoritesProvider({ children }) {
+  const [favorites, setFavorites] = useState(loadFavorites);
+
+  // Save to localStorage whenever favorites change
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
+
+  const addFavorite = (track) => {
     setFavorites(prev => {
-      if (prev.find(fav => fav.id === item.id && fav.type === item.type)) {
+      if (prev.find(fav => fav.id === track.id)) {
         return prev; // Already in favorites
       }
-      return [...prev, { ...item, addedAt: Date.now() }];
+      const favoriteTrack = {
+        id: track.id,
+        title: track.title,
+        artist: track.artist?.name || 'Unknown Artist',
+        album: track.album?.title || 'Unknown Album',
+        cover: track.album?.cover_medium || track.album?.cover_small,
+        preview: track.preview,
+        duration: track.duration,
+        addedAt: Date.now()
+      };
+      return [...prev, favoriteTrack];
     });
   };
 
-  const removeFromFavorites = (id, type) => {
-    setFavorites(prev => prev.filter(fav => !(fav.id === id && fav.type === type)));
+  const removeFavorite = (id) => {
+    setFavorites(prev => prev.filter(fav => fav.id !== id));
   };
 
-  const isFavorite = (id, type) => {
-    return favorites.some(fav => fav.id === id && fav.type === type);
+  const isFavorite = (id) => {
+    return favorites.some(fav => fav.id === id);
   };
+
+  const favoritesList = favorites;
 
   const value = {
-    favorites,
-    addToFavorites,
-    removeFromFavorites,
-    isFavorite
+    favorites: favoritesList,
+    favoritesList,
+    addFavorite,
+    removeFavorite,
+    isFavorite,
+    // Keep backward compatibility
+    addToFavorites: addFavorite,
+    removeFromFavorites: (id) => removeFavorite(id)
   };
 
   return (
