@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import { searchTracks, getCharts, getGenres } from '../lib/deezer';
+import { searchTracks, getCharts } from '../lib/deezer';
 import { usePlayer } from '../contexts/PlayerProvider';
 import { useFavorites } from '../contexts/FavoritesProvider';
 import SearchBar from '../components/SearchBar';
 import TrackCard from '../components/TrackCard';
 import AlbumCard from '../components/AlbumCard';
-import GenreCard from '../components/GenreCard';
+import GenreGrid from '../components/GenreGrid';
+import SurpriseMeButton from '../components/SurpriseMeButton';
 
 export default function Home() {
   const [charts, setCharts] = useState(null);
-  const [genres, setGenres] = useState(null);
   const [searchResults, setSearchResults] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -23,13 +23,8 @@ export default function Home() {
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        const [chartsData, genresData] = await Promise.all([
-          getCharts(),
-          getGenres()
-        ]);
-        
+        const chartsData = await getCharts();
         setCharts(chartsData);
-        setGenres(genresData);
         
         // Check if we're using mock data
         if (chartsData.tracks?.data?.length === 3 && chartsData.tracks.data[0].title === "Harder Better Faster Stronger") {
@@ -63,12 +58,6 @@ export default function Home() {
     } finally {
       setSearchLoading(false);
     }
-  };
-
-  const handleGenreClick = async (genre) => {
-    // For now, search for the genre name
-    // In a full implementation, you'd use genre-specific endpoints
-    handleSearch(genre.name);
   };
 
   const handlePlayTrack = (track, trackList = []) => {
@@ -249,19 +238,18 @@ export default function Home() {
           </div>
         )}
 
+        {/* Surprise Me Button */}
+        {!searchQuery && (
+          <div className="mb-12 text-center">
+            <SurpriseMeButton className="inline-flex" />
+          </div>
+        )}
+
         {/* Genres Section */}
-        {!searchQuery && genres && (
+        {!searchQuery && (
           <div className="mb-12">
             <h2 className="text-3xl font-bold text-white mb-6">Browse by Genre</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {genres.data?.slice(0, 12).map((genre) => (
-                <GenreCard 
-                  key={genre.id} 
-                  genre={genre} 
-                  onClick={handleGenreClick}
-                />
-              ))}
-            </div>
+            <GenreGrid limit={12} />
           </div>
         )}
 
