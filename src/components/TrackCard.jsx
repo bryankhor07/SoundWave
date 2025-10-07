@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerProvider';
 import { useFavorites } from '../contexts/FavoritesProvider';
 
-export default function TrackCard({ track, showArtist = true, showAlbum = true, className = "" }) {
+export default function TrackCard({ track, currentList = [], showArtist = true, showAlbum = true, className = "" }) {
   const { play, pause, isPlaying, currentTrack } = usePlayer();
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
@@ -16,7 +16,8 @@ export default function TrackCard({ track, showArtist = true, showAlbum = true, 
     if (isCurrentTrack && isPlaying) {
       pause();
     } else {
-      play(track);
+      // Pass the current list for queue functionality
+      play(track, currentList.length > 0 ? currentList : [track]);
     }
   };
 
@@ -28,6 +29,13 @@ export default function TrackCard({ track, showArtist = true, showAlbum = true, 
       removeFavorite(track.id);
     } else {
       addFavorite(track);
+    }
+  };
+
+  const handleKeyDown = (e, action) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action(e);
     }
   };
 
@@ -45,18 +53,20 @@ export default function TrackCard({ track, showArtist = true, showAlbum = true, 
         <div className="relative aspect-square mb-3 overflow-hidden rounded-lg">
           <img 
             src={track.album?.cover_medium || track.album?.cover_small || '/placeholder-album.jpg'} 
-            alt={track.title}
+            alt={`${track.title} by ${track.artist?.name || 'Unknown Artist'}`}
             className="w-full h-full object-cover"
           />
           
           {/* Play/Pause Overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 flex items-center justify-center">
             <button
               onClick={handlePlayPause}
-              className="bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-full transition-colors shadow-lg"
-              title={isCurrentTrack && isPlaying ? 'Pause' : 'Play'}
+              onKeyDown={(e) => handleKeyDown(e, handlePlayPause)}
+              className="bg-purple-500 hover:bg-purple-600 focus:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-300 text-white p-3 rounded-full transition-colors shadow-lg"
+              title={isCurrentTrack && isPlaying ? 'Pause track' : 'Play track'}
+              aria-label={`${isCurrentTrack && isPlaying ? 'Pause' : 'Play'} ${track.title} by ${track.artist?.name || 'Unknown Artist'}`}
             >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 {isCurrentTrack && isPlaying ? (
                   <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
                 ) : (
@@ -114,14 +124,16 @@ export default function TrackCard({ track, showArtist = true, showAlbum = true, 
             
             <button
               onClick={handleFavoriteToggle}
-              className={`p-1 rounded-full transition-colors ${
+              onKeyDown={(e) => handleKeyDown(e, handleFavoriteToggle)}
+              className={`p-1 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-300 ${
                 trackIsFavorite 
-                  ? 'text-red-400 hover:text-red-300' 
-                  : 'text-white/60 hover:text-white'
+                  ? 'text-red-400 hover:text-red-300 focus:text-red-300' 
+                  : 'text-white/60 hover:text-white focus:text-white'
               }`}
               title={trackIsFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              aria-label={`${trackIsFavorite ? 'Remove' : 'Add'} ${track.title} ${trackIsFavorite ? 'from' : 'to'} favorites`}
             >
-              <svg className="w-4 h-4" fill={trackIsFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill={trackIsFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
