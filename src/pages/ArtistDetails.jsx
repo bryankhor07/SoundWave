@@ -1,19 +1,41 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getArtist } from '../lib/deezer';
+import { getArtist, getArtistTopTracks, getArtistAlbums } from '../lib/deezer';
+import TrackCard from '../components/TrackCard';
+import AlbumCard from '../components/AlbumCard';
 
 export default function ArtistDetails() {
   const { id } = useParams();
   const [artist, setArtist] = useState(null);
+  const [topTracks, setTopTracks] = useState([]);
+  const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadArtist = async () => {
+    const loadArtistData = async () => {
       try {
         setLoading(true);
         const artistData = await getArtist(id);
         setArtist(artistData);
+        
+        // Load top tracks and albums in parallel
+        const [tracksData, albumsData] = await Promise.allSettled([
+          getArtistTopTracks(id, { limit: 8 }),
+          getArtistAlbums(id, { limit: 8 })
+        ]);
+        
+        if (tracksData.status === 'fulfilled') {
+          setTopTracks(tracksData.value.data || []);
+        } else {
+          console.warn('Failed to load top tracks:', tracksData.reason);
+        }
+        
+        if (albumsData.status === 'fulfilled') {
+          setAlbums(albumsData.value.data || []);
+        } else {
+          console.warn('Failed to load albums:', albumsData.reason);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -22,7 +44,7 @@ export default function ArtistDetails() {
     };
 
     if (id) {
-      loadArtist();
+      loadArtistData();
     }
   }, [id]);
 
@@ -120,16 +142,39 @@ export default function ArtistDetails() {
               </div>
             </div>
 
-            {/* Placeholder for future features */}
-            <div className="mt-8 text-center text-white/70">
-              <p className="mb-4">More artist details coming soon...</p>
-              <div className="space-y-2">
-                <p>• Top tracks</p>
-                <p>• Albums discography</p>
-                <p>• Related artists</p>
+          </div>
+
+          {/* Top Tracks Section */}
+          {topTracks.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-white mb-6">Top Tracks</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {topTracks.map((track) => (
+                  <TrackCard 
+                    key={track.id} 
+                    track={track}
+                    currentList={topTracks}
+                    showArtist={false}
+                  />
+                ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Albums Section */}
+          {albums.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-white mb-6">Albums</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {albums.map((album) => (
+                  <AlbumCard 
+                    key={album.id} 
+                    album={album}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
