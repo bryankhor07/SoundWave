@@ -232,7 +232,11 @@ export default function Home() {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {searchResults.data?.length > 0 ? (
                   searchResults.data.map((track) => (
-                    <TrackCard key={track.id} track={track} />
+                    <TrackCard 
+                      key={track.id} 
+                      track={track} 
+                      currentList={searchResults.data}
+                    />
                   ))
                 ) : (
                   <div className="col-span-full text-center text-white/70 py-12">
@@ -269,7 +273,11 @@ export default function Home() {
               <h2 className="text-3xl font-bold text-white mb-6">🎵 Top Tracks</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {charts.tracks?.data?.slice(0, 10).map((track) => (
-                  <TrackCard key={track.id} track={track} />
+                  <TrackCard 
+                    key={track.id} 
+                    track={track} 
+                    currentList={charts.tracks?.data?.slice(0, 10) || []}
+                  />
                 ))}
               </div>
             </div>
