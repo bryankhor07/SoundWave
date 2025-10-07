@@ -270,6 +270,42 @@ export async function getArtist(id) {
 }
 
 /**
+ * Get artist's top tracks
+ * @param {string|number} id - Artist ID
+ * @param {Object} options - Options object
+ * @param {number} options.limit - Number of tracks to return (default: 10)
+ * @returns {Promise<Object>} - Object containing data array of tracks
+ */
+export async function getArtistTopTracks(id, { limit = 10 } = {}) {
+  if (!id) {
+    throw new Error('Artist ID is required');
+  }
+
+  const url = `${DEEZER_API_BASE}/artist/${id}/top?limit=${limit}`;
+  const cacheKey = `artist:${id}:top:${limit}`;
+  
+  return await fetchWithCache(url, cacheKey);
+}
+
+/**
+ * Get artist's albums
+ * @param {string|number} id - Artist ID
+ * @param {Object} options - Options object
+ * @param {number} options.limit - Number of albums to return (default: 25)
+ * @returns {Promise<Object>} - Object containing data array of albums
+ */
+export async function getArtistAlbums(id, { limit = 25 } = {}) {
+  if (!id) {
+    throw new Error('Artist ID is required');
+  }
+
+  const url = `${DEEZER_API_BASE}/artist/${id}/albums?limit=${limit}`;
+  const cacheKey = `artist:${id}:albums:${limit}`;
+  
+  return await fetchWithCache(url, cacheKey);
+}
+
+/**
  * Get current charts (top tracks, albums, artists)
  * @returns {Promise<Object>} - Charts object containing tracks, albums, and artists
  */
