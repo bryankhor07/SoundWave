@@ -7,6 +7,7 @@ import TrackCard from '../components/TrackCard';
 import AlbumCard from '../components/AlbumCard';
 import GenreGrid from '../components/GenreGrid';
 import SurpriseMeButton from '../components/SurpriseMeButton';
+import { TrackCardSkeleton, AlbumCardSkeleton } from '../components/LoadingSkeleton';
 
 export default function Home() {
   const [charts, setCharts] = useState(null);
@@ -85,10 +86,34 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading charts...</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500" role="main" aria-busy="true" aria-label="Loading homepage content">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Search bar skeleton */}
+            <div className="mb-8">
+              <div className="h-12 bg-white/10 rounded-lg animate-pulse max-w-2xl mx-auto"></div>
+            </div>
+            
+            {/* Tracks skeleton */}
+            <div className="mb-12">
+              <div className="h-8 bg-white/20 rounded w-48 mb-6 animate-pulse"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <TrackCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+            
+            {/* Albums skeleton */}
+            <div>
+              <div className="h-8 bg-white/20 rounded w-48 mb-6 animate-pulse"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <AlbumCardSkeleton key={i} />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -96,12 +121,13 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center" role="main">
         <div className="text-white text-center">
           <p className="text-red-300 mb-4">Error: {error}</p>
           <button 
             onClick={() => window.location.reload()}
             className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+            aria-label="Reload page"
           >
             Retry
           </button>
@@ -111,7 +137,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500" role="main">
       <div className="container mx-auto px-4 py-8">
         {/* Header with Search */}
         <div className="text-center mb-8">

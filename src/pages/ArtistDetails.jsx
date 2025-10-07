@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getArtist, getArtistTopTracks, getArtistAlbums } from '../lib/deezer';
 import TrackCard from '../components/TrackCard';
 import AlbumCard from '../components/AlbumCard';
+import { DetailPageSkeleton } from '../components/LoadingSkeleton';
 
 export default function ArtistDetails() {
   const { id } = useParams();
@@ -49,22 +50,15 @@ export default function ArtistDetails() {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading artist...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center" role="main">
         <div className="text-white text-center">
-          <p className="text-red-300 mb-4">Error: {error}</p>
-          <Link to="/" className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors inline-block">
+          <p className="text-red-300 mb-4" role="alert">Error: {error}</p>
+          <Link to="/" className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors inline-block" aria-label="Return to home page">
             Back to Home
           </Link>
         </div>
@@ -86,7 +80,7 @@ export default function ArtistDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500" role="main">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Back Button */}
@@ -105,7 +99,7 @@ export default function ArtistDetails() {
             <div className="text-center mb-8">
               <img 
                 src={artist.picture_xl || artist.picture_big} 
-                alt={artist.name}
+                alt={`Photo of ${artist.name}`}
                 className="w-48 h-48 mx-auto rounded-full shadow-2xl mb-6"
               />
               <h1 className="text-5xl font-bold text-white mb-4">{artist.name}</h1>

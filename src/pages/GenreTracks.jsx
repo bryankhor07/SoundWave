@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { getGenreArtists, getGenreTracks } from '../lib/deezer';
 import TrackCard from '../components/TrackCard';
+import { TrackCardSkeleton, ArtistCardSkeleton } from '../components/LoadingSkeleton';
 
 export default function GenreTracks() {
   const { id } = useParams();
@@ -56,10 +57,18 @@ export default function GenreTracks() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading {genreName}...</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500" role="main" aria-busy="true" aria-label="Loading genre content">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="h-6 bg-white/20 rounded w-32 mb-8 animate-pulse"></div>
+            <div className="h-10 bg-white/20 rounded w-48 mb-2 animate-pulse"></div>
+            <div className="h-6 bg-white/20 rounded w-64 mb-8 animate-pulse"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <TrackCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -67,10 +76,10 @@ export default function GenreTracks() {
 
   if (error && tracks.length === 0 && artists.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center" role="main">
         <div className="text-white text-center">
-          <p className="text-red-300 mb-4">Error: {error}</p>
-          <Link to="/" className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors inline-block">
+          <p className="text-red-300 mb-4" role="alert">Error: {error}</p>
+          <Link to="/" className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors inline-block" aria-label="Return to home page">
             Back to Home
           </Link>
         </div>
@@ -79,7 +88,7 @@ export default function GenreTracks() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500" role="main">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Back Button */}
@@ -158,7 +167,7 @@ export default function GenreTracks() {
                         <div className="relative aspect-square mb-3 overflow-hidden rounded-full">
                           <img 
                             src={artist.picture_medium || artist.picture_small} 
-                            alt={artist.name}
+                            alt={`Photo of ${artist.name}`}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
                         </div>
