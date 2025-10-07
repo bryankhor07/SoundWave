@@ -349,6 +349,64 @@ export async function getGenres() {
 }
 
 /**
+ * Get artists for a specific genre
+ * @param {string|number} genreId - Genre ID
+ * @param {Object} options - Options object
+ * @param {number} options.limit - Number of artists to return (default: 25)
+ * @returns {Promise<Object>} - Object containing data array of artists
+ */
+export async function getGenreArtists(genreId, { limit = 25 } = {}) {
+  if (!genreId) {
+    throw new Error('Genre ID is required');
+  }
+
+  const url = `${DEEZER_API_BASE}/genre/${genreId}/artists?limit=${limit}`;
+  const cacheKey = `genre:${genreId}:artists:${limit}`;
+  
+  return await fetchWithCache(url, cacheKey);
+}
+
+/**
+ * Get top tracks for a specific genre (via chart)
+ * @param {string|number} genreId - Genre ID
+ * @param {Object} options - Options object
+ * @param {number} options.limit - Number of tracks to return (default: 25)
+ * @returns {Promise<Object>} - Object containing data array of tracks
+ */
+export async function getGenreTracks(genreId, { limit = 25 } = {}) {
+  if (!genreId) {
+    throw new Error('Genre ID is required');
+  }
+
+  // Use chart endpoint filtered by genre
+  const url = `${DEEZER_API_BASE}/chart/${genreId}/tracks?limit=${limit}`;
+  const cacheKey = `genre:${genreId}:tracks:${limit}`;
+  
+  return await fetchWithCache(url, cacheKey);
+}
+
+/**
+ * Get a random track from charts for "Surprise Me" feature
+ * @returns {Promise<Object>} - Random track object
+ */
+export async function getRandomTrack() {
+  try {
+    const charts = await getCharts();
+    const tracks = charts.tracks?.data || [];
+    
+    if (tracks.length === 0) {
+      throw new Error('No tracks available');
+    }
+    
+    // Get a random track from the charts
+    const randomIndex = Math.floor(Math.random() * tracks.length);
+    return tracks[randomIndex];
+  } catch (error) {
+    throw new Error(`Failed to get random track: ${error.message}`);
+  }
+}
+
+/**
  * Clear the cache (useful for testing or manual cache invalidation)
  */
 export function clearCache() {
