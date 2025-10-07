@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getAlbum } from '../lib/deezer';
+import { usePlayer } from '../contexts/PlayerProvider';
+import { useFavorites } from '../contexts/FavoritesProvider';
 
 export default function AlbumDetails() {
   const { id } = useParams();
   const [album, setAlbum] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const { play, pause, currentTrack, isPlaying } = usePlayer();
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     const loadAlbum = async () => {
@@ -140,31 +145,80 @@ export default function AlbumDetails() {
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8">
               <h2 className="text-2xl font-bold text-white mb-6">Tracks</h2>
               <div className="space-y-2">
-                {album.tracks.data.map((track, index) => (
-                  <Link
-                    key={track.id}
-                    to={`/track/${track.id}`}
-                    className="flex items-center space-x-4 p-3 rounded-lg hover:bg-white/10 transition-colors text-white/90 hover:text-white group"
-                  >
-                    <span className="text-sm font-semibold w-8 text-center text-white/60 group-hover:text-white/80">
-                      {index + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{track.title}</p>
-                      <p className="text-sm text-white/70 truncate">{track.artist?.name}</p>
-                    </div>
-                    <div className="text-sm text-white/60 group-hover:text-white/80">
-                      {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}
-                    </div>
-                    {track.preview && (
-                      <div className="text-white/60 group-hover:text-white/80">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
+                {album.tracks.data.map((track, index) => {
+                  const isCurrentTrack = currentTrack?.id === track.id;
+                  const trackIsFavorite = isFavorite(track.id);
+                  
+                  const handlePlayPause = (e) => {
+                    e.preventDefault();
+                    if (isCurrentTrack && isPlaying) {
+                      pause();
+                    } else {
+                      play(track, album.tracks.data);
+                    }
+                  };
+                  
+                  const handleFavoriteToggle = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (trackIsFavorite) {
+                      removeFavorite(track.id);
+                    } else {
+                      addFavorite(track);
+                    }
+                  };
+                  
+                  return (
+                    <div
+                      key={track.id}
+                      className={`flex items-center space-x-4 p-3 rounded-lg transition-colors text-white/90 group ${
+                        isCurrentTrack ? 'bg-white/20' : 'hover:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-sm font-semibold w-8 text-center text-white/60 group-hover:text-white/80">
+                        {index + 1}
+                      </span>
+                      
+                      <button
+                        onClick={handlePlayPause}
+                        className="p-2 rounded-full hover:bg-white/20 transition-colors"
+                        title={isCurrentTrack && isPlaying ? 'Pause' : 'Play'}
+                      >
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          {isCurrentTrack && isPlaying ? (
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                          ) : (
+                            <path d="M8 5v14l11-7z"/>
+                          )}
                         </svg>
+                      </button>
+                      
+                      <Link
+                        to={`/track/${track.id}`}
+                        className="flex-1 min-w-0 hover:text-white"
+                      >
+                        <p className="font-medium truncate">{track.title}</p>
+                        <p className="text-sm text-white/70 truncate">{track.artist?.name}</p>
+                      </Link>
+                      
+                      <div className="text-sm text-white/60 group-hover:text-white/80">
+                        {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}
                       </div>
-                    )}
-                  </Link>
-                ))}
+                      
+                      <button
+                        onClick={handleFavoriteToggle}
+                        className={`p-2 rounded-full hover:bg-white/20 transition-colors ${
+                          trackIsFavorite ? 'text-red-400' : 'text-white/60 hover:text-white'
+                        }`}
+                        title={trackIsFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        <svg className="w-4 h-4" fill={trackIsFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
