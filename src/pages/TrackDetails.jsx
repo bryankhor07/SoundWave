@@ -1,27 +1,42 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getTrack } from '../lib/deezer';
+import { getTrack, getArtistTopTracks } from '../lib/deezer';
 import { useFavorites } from '../contexts/FavoritesProvider';
 import { usePlayer } from '../contexts/PlayerProvider';
+import TrackCard from '../components/TrackCard';
 
 export default function TrackDetails() {
   const { id } = useParams();
   const [track, setTrack] = useState(null);
+  const [relatedTracks, setRelatedTracks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
-  const { playTrack, currentTrack, isPlaying } = usePlayer();
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { play, pause, currentTrack, isPlaying } = usePlayer();
 
   const isCurrentTrack = currentTrack?.id === track?.id;
-  const trackIsFavorite = track ? isFavorite(track.id, 'track') : false;
+  const trackIsFavorite = track ? isFavorite(track.id) : false;
 
   useEffect(() => {
-    const loadTrack = async () => {
+    const loadTrackAndRelated = async () => {
       try {
         setLoading(true);
         const trackData = await getTrack(id);
         setTrack(trackData);
+        
+        // Load related tracks from the same artist
+        if (trackData.artist?.id) {
+          try {
+            const artistTracks = await getArtistTopTracks(trackData.artist.id, { limit: 9 });
+            // Filter out the current track
+            const related = artistTracks.data?.filter(t => t.id !== trackData.id).slice(0, 8) || [];
+            setRelatedTracks(related);
+          } catch (relatedErr) {
+            console.warn('Failed to load related tracks:', relatedErr);
+            setRelatedTracks([]);
+          }
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -30,21 +45,23 @@ export default function TrackDetails() {
     };
 
     if (id) {
-      loadTrack();
+      loadTrackAndRelated();
     }
   }, [id]);
 
   const handleFavoriteToggle = () => {
     if (trackIsFavorite) {
-      removeFromFavorites(track.id, 'track');
+      removeFavorite(track.id);
     } else {
-      addToFavorites({ ...track, type: 'track' });
+      addFavorite(track);
     }
   };
 
-  const handlePlay = () => {
-    if (track?.preview) {
-      playTrack(track);
+  const handlePlayPause = () => {
+    if (isCurrentTrack && isPlaying) {
+      pause();
+    } else {
+      play(track, [track, ...relatedTracks]);
     }
   };
 
@@ -131,21 +148,20 @@ export default function TrackDetails() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-4 mb-6">
-                  {track.preview && (
-                    <button
-                      onClick={handlePlay}
-                      className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        {isCurrentTrack && isPlaying ? (
-                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                        ) : (
-                          <path d="M8 5v14l11-7z"/>
-                        )}
-                      </svg>
-                      <span>{isCurrentTrack && isPlaying ? 'Pause' : 'Play Preview'}</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={handlePlayPause}
+                    className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                    disabled={!track.preview}
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                      {isCurrentTrack && isPlaying ? (
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                      ) : (
+                        <path d="M8 5v14l11-7z"/>
+                      )}
+                    </svg>
+                    <span>{isCurrentTrack && isPlaying ? 'Pause' : 'Play'}</span>
+                  </button>
 
                   <button
                     onClick={handleFavoriteToggle}
@@ -172,6 +188,25 @@ export default function TrackDetails() {
               </div>
             </div>
           </div>
+
+          {/* Related Tracks Section */}
+          {relatedTracks.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-white mb-6">
+                More from {track.artist?.name}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {relatedTracks.map((relatedTrack) => (
+                  <TrackCard 
+                    key={relatedTrack.id} 
+                    track={relatedTrack}
+                    currentList={[track, ...relatedTracks]}
+                    showAlbum={true}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
