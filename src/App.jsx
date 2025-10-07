@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import TrackDetails from './pages/TrackDetails';
 import ArtistDetails from './pages/ArtistDetails';
 import AlbumDetails from './pages/AlbumDetails';
+import GenreTracks from './pages/GenreTracks';
 import Favorites from './pages/Favorites';
 import * as deezerAPI from './lib/deezer.js'
 
@@ -30,6 +31,7 @@ function App() {
                 <Route path="/track/:id" element={<TrackDetails />} />
                 <Route path="/artist/:id" element={<ArtistDetails />} />
                 <Route path="/album/:id" element={<AlbumDetails />} />
+                <Route path="/genre/:id" element={<GenreTracks />} />
                 <Route path="/favorites" element={<Favorites />} />
               </Routes>
             </div>
