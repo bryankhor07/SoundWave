@@ -102,21 +102,6 @@ SoundWave/
 └─ tailwind.config.js, postcss.config.js, index.css, README.md
 ```
 
-## Features Roadmap
-
-- [x] Project scaffold with Vite + React
-- [x] Tailwind CSS v3 configuration
-- [x] React Router v6 setup
-- [ ] Deezer API wrapper
-- [ ] Search with debounce
-- [ ] Track/Album/Artist detail pages
-- [ ] Audio player with controls
-- [ ] Queue management
-- [ ] Favorites & localStorage persistence
-- [ ] Genre discovery
-- [ ] Charts & trending
-- [ ] Shuffle / "Surprise me" feature
-
 ## Development Notes
 
 - **Search debounce**: 250-400ms for optimal UX
