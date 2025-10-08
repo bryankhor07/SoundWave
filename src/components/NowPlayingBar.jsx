@@ -15,13 +15,13 @@ export default function NowPlayingBar() {
     return null;
   }
 
-  const trackIsFavorite = isFavorite(currentTrack.id);
+  const trackIsFavorite = isFavorite(currentTrack.id, 'track');
 
   const handleFavoriteToggle = () => {
     if (trackIsFavorite) {
-      removeFavorite(currentTrack.id);
+      removeFavorite(currentTrack.id, 'track');
     } else {
-      addFavorite(currentTrack);
+      addFavorite(currentTrack, 'track');
     }
   };
 

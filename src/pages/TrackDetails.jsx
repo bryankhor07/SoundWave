@@ -17,7 +17,7 @@ export default function TrackDetails() {
   const { play, pause, currentTrack, isPlaying } = usePlayer();
 
   const isCurrentTrack = currentTrack?.id === track?.id;
-  const trackIsFavorite = track ? isFavorite(track.id) : false;
+  const trackIsFavorite = track ? isFavorite(track.id, 'track') : false;
 
   useEffect(() => {
     const loadTrackAndRelated = async () => {
@@ -52,9 +52,9 @@ export default function TrackDetails() {
 
   const handleFavoriteToggle = () => {
     if (trackIsFavorite) {
-      removeFavorite(track.id);
+      removeFavorite(track.id, 'track');
     } else {
-      addFavorite(track);
+      addFavorite(track, 'track');
     }
   };
 

@@ -72,10 +72,10 @@ export default function Home() {
   };
 
   const handleFavoriteToggle = (track) => {
-    if (isFavorite(track.id)) {
-      removeFavorite(track.id);
+    if (isFavorite(track.id, 'track')) {
+      removeFavorite(track.id, 'track');
     } else {
-      addFavorite(track);
+      addFavorite(track, 'track');
     }
   };
 

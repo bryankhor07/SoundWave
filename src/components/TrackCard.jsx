@@ -1,34 +1,27 @@
 import { Link } from 'react-router-dom';
 import { usePlayer } from '../contexts/PlayerProvider';
 import { useFavorites } from '../contexts/FavoritesProvider';
-
 export default function TrackCard({ track, currentList = [], showArtist = true, showAlbum = true, className = "" }) {
   const { play, pause, isPlaying, currentTrack } = usePlayer();
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   const isCurrentTrack = currentTrack?.id === track.id;
-  const trackIsFavorite = isFavorite(track.id);
+  const trackIsFavorite = isFavorite(track.id, 'track');
 
-  const handlePlayPause = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handlePlay = () => {
     if (isCurrentTrack && isPlaying) {
       pause();
     } else {
-      // Pass the current list for queue functionality
-      play(track, currentList.length > 0 ? currentList : [track]);
+      play(track, currentList);
     }
   };
 
   const handleFavoriteToggle = (e) => {
-    e.preventDefault();
     e.stopPropagation();
-    
     if (trackIsFavorite) {
-      removeFavorite(track.id);
+      removeFavorite(track.id, 'track');
     } else {
-      addFavorite(track);
+      addFavorite(track, 'track');
     }
   };
 
@@ -60,8 +53,8 @@ export default function TrackCard({ track, currentList = [], showArtist = true, 
           {/* Play/Pause Overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 flex items-center justify-center">
             <button
-              onClick={handlePlayPause}
-              onKeyDown={(e) => handleKeyDown(e, handlePlayPause)}
+              onClick={handlePlay}
+              onKeyDown={(e) => handleKeyDown(e, handlePlay)}
               className="bg-purple-500 hover:bg-purple-600 focus:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-300 text-white p-3 rounded-full transition-colors shadow-lg"
               title={isCurrentTrack && isPlaying ? 'Pause track' : 'Play track'}
               aria-label={`${isCurrentTrack && isPlaying ? 'Pause' : 'Play'} ${track.title} by ${track.artist?.name || 'Unknown Artist'}`}

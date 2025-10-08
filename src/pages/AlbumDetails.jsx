@@ -141,7 +141,7 @@ export default function AlbumDetails() {
               <div className="space-y-2">
                 {album.tracks.data.map((track, index) => {
                   const isCurrentTrack = currentTrack?.id === track.id;
-                  const trackIsFavorite = isFavorite(track.id);
+                  const trackIsFavorite = isFavorite(track.id, 'track');
                   
                   const handlePlayPause = (e) => {
                     e.preventDefault();
@@ -151,14 +151,13 @@ export default function AlbumDetails() {
                       play(track, album.tracks.data);
                     }
                   };
-                  
+
                   const handleFavoriteToggle = (e) => {
-                    e.preventDefault();
                     e.stopPropagation();
                     if (trackIsFavorite) {
-                      removeFavorite(track.id);
+                      removeFavorite(track.id, 'track');
                     } else {
-                      addFavorite(track);
+                      addFavorite(track, 'track');
                     }
                   };
                   
