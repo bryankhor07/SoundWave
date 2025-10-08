@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useFavorites } from '../contexts/FavoritesProvider';
 
 export default function NavBar() {
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { favorites } = useFavorites();
   const location = useLocation();
@@ -47,61 +46,22 @@ export default function NavBar() {
             </Link>
           </div>
 
-          {/* Search and Mobile Menu */}
-          <div className="flex items-center space-x-4">
-            {/* Search Toggle */}
-            <button
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="text-white/90 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"
-              aria-label="Toggle search"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden text-white/90 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"
-              aria-label={isMobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
-              aria-expanded={isMobileMenuOpen}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                {isMobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden text-white/90 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"
+            aria-label={isMobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
+            aria-expanded={isMobileMenuOpen}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              {isMobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
-
-        {/* Search Bar (Expandable) */}
-        {isSearchOpen && (
-          <div className="pb-4">
-            <div className="max-w-md mx-auto">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search for tracks, artists, albums..."
-                  className="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-                  autoFocus
-                  aria-label="Search music"
-                />
-                <button 
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white"
-                  aria-label="Submit search"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Mobile Navigation Menu */}
