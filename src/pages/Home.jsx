@@ -52,9 +52,11 @@ export default function Home() {
     try {
       setSearchLoading(true);
       const results = await searchTracks(query, { limit: 20 });
+      console.log('Search results:', results);
       setSearchResults(results);
     } catch (err) {
       console.error('Search failed:', err);
+      // Even on error, try to return empty results gracefully
       setSearchResults({ data: [] });
     } finally {
       setSearchLoading(false);
@@ -243,6 +245,14 @@ export default function Home() {
               )}
             </div>
             
+            {searchResults && searchResults.data?.length > 0 && searchResults.data[0]?.id < 1000 && (
+              <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4 mb-6 text-white">
+                <p className="text-sm">
+                  <strong>ℹ️ Demo Mode:</strong> Showing sample data. The Deezer API may be unavailable due to CORS restrictions.
+                </p>
+              </div>
+            )}
+            
             {searchResults && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {searchResults.data?.length > 0 ? (
@@ -256,7 +266,7 @@ export default function Home() {
                 ) : (
                   <div className="col-span-full text-center text-white/70 py-12">
                     <p className="text-xl mb-2">No results found</p>
-                    <p>Try searching for different keywords</p>
+                    <p>Try searching for different keywords like "Taylor Swift", "Adele", or "Ed Sheeran"</p>
                   </div>
                 )}
               </div>
